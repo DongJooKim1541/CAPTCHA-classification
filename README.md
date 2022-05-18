@@ -22,7 +22,8 @@ https://www.kaggle.com/datasets/akashguna/large-captcha-dataset
 
 ## Instructions
 1. Unzip the zip file and put it in the pycharm project directory<br/>
-2. Adjust the channel tensor of the network according to the image size
+2. Adjust the channel tensor of the network according to the image size<br/>
+3. The original image data is 256 x 256 and the image data used in the project is 128 x 128.
 
 <br/>
 
