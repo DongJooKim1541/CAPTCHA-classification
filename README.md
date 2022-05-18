@@ -17,6 +17,8 @@ Pytorch
 
 ## Dataset 
 https://www.kaggle.com/datasets/akashguna/large-captcha-dataset
+<br/>
+<img src = "./dataset.png"> 
 
 <br/>
 
