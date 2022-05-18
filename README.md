@@ -26,4 +26,13 @@ https://www.kaggle.com/datasets/akashguna/large-captcha-dataset
 
 <br/>
 
-<img src = "./ScreenShots/2.png" width="50%"> 
+## Result
+
+<img src = "./loss_acc.png" width="30%"> 
+train accuracy and test accuracy
+
+<br/>
+<br/>
+
+<img src = "./loss_acc_plot.png"> 
+loss and accuracy(train,test)
