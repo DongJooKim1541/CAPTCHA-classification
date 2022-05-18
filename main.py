@@ -81,6 +81,7 @@ def compute_loss(label, label_logits):
                                   dtype=torch.int32).to(device)  # [batch_size]
     label_targets, label_targets_lens = encode_label(label)
     loss = criterion(label_logps, label_targets, label_logps_lens, label_targets_lens)
+    # CTCLoss([T, batch_size, num_classes],[T * batch_size],[batch_size],[batch_size])
 
     return loss
 
