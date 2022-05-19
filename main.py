@@ -26,7 +26,7 @@ clip_norm = 5
 trainset = CAPTCHADataset("train")
 testset = CAPTCHADataset("test")
 train_loader = DataLoader(trainset, batch_size=batch_size, num_workers=0, shuffle=True)
-test_loader = DataLoader(testset, batch_size=batch_size, num_workers=0, shuffle=False)
+test_loader = DataLoader(testset, batch_size=batch_size, num_workers=0, shuffle=True)
 
 """Confirm data"""
 print("len(train_loader), len(test_loader): ", len(train_loader), len(test_loader))
@@ -124,14 +124,19 @@ def compare_label(label, label_pred):
 
 """ Model train """
 train_epoch_loss = []
+train_epoch_acc = []
 num_updates_epochs = []
-train_acc_list = []
 for epoch in range(1, num_epochs + 1):
     epoch_loss_list = []
+    train_acc_list = []
     num_updates_epoch = 0
     for image, label in train_loader:
         optimizer.zero_grad()
         label_logits = crnn(image.to(device))
+        label_pred = decode_predictions(label_logits.cpu())
+        train_correct, check = compare_label(label, label_pred)
+        train_iteration_accuracy = train_correct / check
+
         loss = compute_loss(label, label_logits)
         iteration_loss = loss.item()
         # If iteration loss is NaN or inf, ignore it
@@ -140,66 +145,69 @@ for epoch in range(1, num_epochs + 1):
 
         num_updates_epoch += 1
         epoch_loss_list.append(iteration_loss)
+        train_acc_list.append(train_iteration_accuracy)
         loss.backward()
         nn.utils.clip_grad_norm_(crnn.parameters(), clip_norm)
         optimizer.step()
     # Mean the iteration loss to 1 epoch loss
     epoch_loss = np.mean(epoch_loss_list)
-    print("Epoch:{}    Loss:{}    NumUpdates:{}".format(epoch, epoch_loss, num_updates_epoch))
+    epoch_acc=np.mean(train_acc_list)
+    print("Epoch:{}    Train loss:{}    Train acc:{}    NumUpdates:{}".format(epoch, epoch_loss, epoch_acc,num_updates_epoch))
     train_epoch_loss.append(epoch_loss)
+    train_epoch_acc.append(epoch_acc)
     num_updates_epochs.append(num_updates_epoch)
     lr_scheduler.step(epoch_loss)
 
-""" train accuracy """
-with torch.no_grad():
-    train_correct = 0
-    train_check = 0
-    for image, label in train_loader:
-        train_check += 1
-        label_logits = crnn(image.to(device))
-        # print(label_logits.size()) # [T, batch_size, num_classes==num_features]
-        label_pred = decode_predictions(label_logits.cpu())
-
-        # print(label, label_pred)
-
-        correct, check = compare_label(label, label_pred)
-        train_correct += correct
-        train_check += check
-        train_accuracy = train_correct / train_check
-        train_acc_list.append(train_accuracy)
-print("train_accuracy: ", train_acc_list[-1])
-
 """ Test """
-test_acc_list = []
-with torch.no_grad():
-    test_correct = 0
-    test_check = 0
-    for image, label in test_loader:
-        test_check += 1
-        label_logits = crnn(image.to(device))  # [width, batch_size, num_classes==num_features]
-        label_pred = decode_predictions(label_logits.cpu())
-        # print(label, label_pred)
-        correct, check = compare_label(label, label_pred)
-        test_correct += correct
-        test_check += check
-        test_accuracy = test_correct / test_check
-        test_acc_list.append(test_accuracy)
-print("test_accuracy: ", test_acc_list[-1])
+test_accuracy_list=[]
+test_loss_list=[]
+for epoch in range(1, num_epochs + 1):
+    with torch.no_grad():
+        test_correct = 0
+        test_check = 0
+        test_epoch_loss_list=[]
+        test_acc_iteration_list = []
+        for image, label in test_loader:
+            test_check += 1
+            label_logits = crnn(image.to(device))  # [width, batch_size, num_classes==num_features]
+            label_pred = decode_predictions(label_logits.cpu())
+            loss = compute_loss(label, label_logits)
+            iteration_loss = loss.item()
+            # print(label, label_pred)
+            correct, check = compare_label(label, label_pred)
+            test_correct += correct
+            test_check += check
+            test_accuracy = test_correct / test_check
+            test_epoch_loss_list.append(iteration_loss)
+            test_acc_iteration_list.append(test_accuracy)
+        test_accuracy=np.mean(test_acc_iteration_list)
+        test_loss=np.mean(test_epoch_loss_list)
+        print("Epoch:{}    Test loss:{}    Test acc:{}".format(epoch, test_loss, test_accuracy))
+        test_accuracy_list.append(test_accuracy)
+        test_loss_list.append(test_loss)
+
 
 if __name__ == '__main__':
-    # plot three charts
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
-    ax1.plot(train_epoch_loss)
+    fig=plt.figure(figsize=(12,20))
+    x=np.linspace(1,num_epochs,num_epochs)
+
+    ax1=fig.add_subplot(2,1,1)
+    ax1.plot(x,train_epoch_loss,label="Train loss")
+    ax1.plot(x,test_loss_list,label="Test loss")
     ax1.set_xlabel("Epochs")
     ax1.set_ylabel("Loss")
-    # print(train_acc_list)
-    ax2.plot(train_acc_list)
-    ax2.set_xlabel("train data")
-    ax2.set_ylabel("accuracy")
-    # print(test_acc_list)
-    ax3.plot(test_acc_list)
-    ax3.set_xlabel("test data")
-    ax3.set_ylabel("accuracy")
+    ax1.set_title("Loss")
+    ax1.legend()
+
+    ax2=fig.add_subplot(2,1,2)
+    ax2.plot(x, train_epoch_acc,label="Train acc")
+    ax2.plot(x, test_accuracy_list,label="Test acc")
+    ax2.set_xlabel("Epochs")
+    ax2.set_ylabel("Accuracy")
+    ax2.set_title("Accuracy")
+    ax2.legend()
+    print("train_accuracy: ", train_epoch_acc[-1])
+    print("test_accuracy: ", test_accuracy_list[-1])
+
 
     plt.show()
-
