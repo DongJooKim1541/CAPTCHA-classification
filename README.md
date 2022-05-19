@@ -32,11 +32,11 @@ https://www.kaggle.com/datasets/akashguna/large-captcha-dataset
 
 ## Result
 
-<img src = "./loss_acc.png" width="30%"> 
+<img src = "./Accuracy.PNG" width="30%"> 
 train accuracy and test accuracy
 
 <br/>
 <br/>
 
-<img src = "./loss_acc_plot.png" width="80%"> 
+<img src = "./loss_and_acc.PNG" width="80%"> 
 loss and accuracy(train,test)
