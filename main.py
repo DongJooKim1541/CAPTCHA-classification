@@ -16,8 +16,8 @@ else:
 print('Using PyTorch version: ', torch.__version__, ' Device: ', device)
 
 """Paramenter generalization"""
-batch_size = 8
-num_epochs = 10
+batch_size = 64
+num_epochs = 100
 lr = 0.001
 weight_decay = 1e-3
 clip_norm = 5
