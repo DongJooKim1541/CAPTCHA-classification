@@ -38,5 +38,5 @@ train accuracy and test accuracy
 <br/>
 <br/>
 
-<img src = "./loss_and_acc.PNG" width="80%"> 
+<img src = "./loss_and_acc.PNG" width="90%"> 
 loss and accuracy(train,test)
