@@ -87,7 +87,7 @@ def compute_loss(label, label_logits):
 
 
 """Compute loss"""
-compute_loss(label, label_logits)
+#compute_loss(label, label_logits)
 
 """decode prediction labels to text"""
 
@@ -173,6 +173,9 @@ for epoch in range(1, num_epochs + 1):
             label_pred = decode_predictions(label_logits.cpu())
             loss = compute_loss(label, label_logits)
             iteration_loss = loss.item()
+            # If iteration loss is NaN or inf, ignore it
+            if np.isnan(iteration_loss) or np.isinf(iteration_loss):
+                continue
             # print(label, label_pred)
             correct, check = compare_label(label, label_pred)
             test_correct += correct
