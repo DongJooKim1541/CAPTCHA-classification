@@ -23,13 +23,20 @@ class CRNN(nn.Module):
         self.cnn1 = nn.Sequential(*resnet_modules)
 
         # CNN Part 2
+
+        self.cnn2 = nn.Sequential(
+            nn.Conv2d(256, 256, kernel_size=(3, 6), stride=3, padding=2),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True)
+        )
+        """
         self.cnn2 = nn.Sequential(
             nn.Conv2d(256, 256, kernel_size=(3, 6), stride=1, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=True)
-        )
-        self.linear1 = nn.Linear(2048, 256)
-
+        )"""
+        self.linear1 = nn.Linear(1536, 256)
+        #self.linear1 = nn.Linear(2048, 256)
         # RNN
         self.rnn1 = nn.GRU(input_size=rnn_hidden_size,
                            hidden_size=rnn_hidden_size,
@@ -43,31 +50,31 @@ class CRNN(nn.Module):
 
     def forward(self, batch):
         batch = self.cnn1(batch)
-        # print(batch.size())
+        #print(batch.size())
         # torch.Size([batch_size, 256, 8, 8])
 
         batch = self.cnn2(batch)  # [batch_size, channels, height, width]
-        # print(batch.size())
+        #print(batch.size())
         # torch.Size([batch_size, 256, 8, 5])
 
         batch = batch.permute(0, 3, 1, 2)  # [batch_size, width, channels, height]
-        # print(batch.size())
+        #print(batch.size())
         # torch.Size([batch_size, 5, 256, 8])
 
         batch_size = batch.size(0)
         T = batch.size(1)  # width
         batch = batch.view(batch_size, T, -1)  # [batch_size, T==width, num_features==channels*height]
-        # print(batch.size())
+        #print(batch.size())
         # torch.Size([batch_size, 5, 2048])
 
         batch = self.linear1(batch)
-        # print(batch.size())
+        #print(batch.size())
         # torch.Size([batch_size, 5, 256])
 
         batch, hidden = self.rnn1(batch)
         feature_size = batch.size(2)
         batch = batch[:, :, :feature_size // 2] + batch[:, :, feature_size // 2:]
-        # print(batch.size())
+        #print(batch.size())
         # torch.Size([batch_size, 5, 256])
 
         batch, hidden = self.rnn2(batch)
@@ -94,4 +101,3 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02) # initialize the weight to mean 1.0, deviation 0.02
         m.bias.data.fill_(0) # initializes the bias to 0
-
