@@ -5,7 +5,8 @@ from torchvision import transforms
 from PIL import Image
 import random
 
-data_path = "./Large_captcha_dataset_png_small/"
+#data_path = "./Large_captcha_dataset_png_small/"
+data_path = "./Large_Captcha_Dataset/"
 
 file_list = os.listdir(data_path)
 print("len(file_list): ", len(file_list))
@@ -64,4 +65,3 @@ class CAPTCHADataset(Dataset):
             transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
         ])
         return transform_ops(image)
-
