@@ -53,6 +53,12 @@ print("label_logits.shape: ", label_logits.shape)  # torch.Size([T, batch_size, 
 # If output is "aaaabbbbbccddeeff", it can be summarized as "abcedf"
 criterion = nn.CTCLoss(blank=0)
 
+train_epoch_loss = []
+train_epoch_acc = []
+num_updates_epochs = []
+test_accuracy_list=[]
+test_loss_list=[]
+
 """Encoding label to tensor"""
 
 
@@ -123,16 +129,17 @@ def compare_label(label, label_pred):
 
 
 """ Model train """
-train_epoch_loss = []
-train_epoch_acc = []
-num_updates_epochs = []
-for epoch in range(1, num_epochs + 1):
+def train(model, device, train_loader, optimizer):
+    model.train()
     epoch_loss_list = []
     train_acc_list = []
     num_updates_epoch = 0
     for image, label in train_loader:
+        #print("image.size(): ",image.size())
+        #print(label)
+        #print("label.size(): ", label.size())
         optimizer.zero_grad()
-        label_logits = crnn(image.to(device))
+        label_logits = model(image.to(device))
         label_pred = decode_predictions(label_logits.cpu())
         train_correct, check = compare_label(label, label_pred)
         train_iteration_accuracy = train_correct / check
@@ -147,7 +154,7 @@ for epoch in range(1, num_epochs + 1):
         epoch_loss_list.append(iteration_loss)
         train_acc_list.append(train_iteration_accuracy)
         loss.backward()
-        nn.utils.clip_grad_norm_(crnn.parameters(), clip_norm)
+        nn.utils.clip_grad_norm_(model.parameters(), clip_norm)
         optimizer.step()
     # Mean the iteration loss to 1 epoch loss
     epoch_loss = np.mean(epoch_loss_list)
@@ -159,9 +166,8 @@ for epoch in range(1, num_epochs + 1):
     lr_scheduler.step(epoch_loss)
 
 """ Test """
-test_accuracy_list=[]
-test_loss_list=[]
-for epoch in range(1, num_epochs + 1):
+def test(model, device, test_loader):
+    model.eval()
     with torch.no_grad():
         test_correct = 0
         test_check = 0
@@ -169,11 +175,10 @@ for epoch in range(1, num_epochs + 1):
         test_acc_iteration_list = []
         for image, label in test_loader:
             test_check += 1
-            label_logits = crnn(image.to(device))  # [width, batch_size, num_classes==num_features]
+            label_logits = model(image.to(device))  # [width, batch_size, num_classes==num_features]
             label_pred = decode_predictions(label_logits.cpu())
             loss = compute_loss(label, label_logits)
             iteration_loss = loss.item()
-            # If iteration loss is NaN or inf, ignore it
             if np.isnan(iteration_loss) or np.isinf(iteration_loss):
                 continue
             # print(label, label_pred)
@@ -191,6 +196,10 @@ for epoch in range(1, num_epochs + 1):
 
 
 if __name__ == '__main__':
+    for epoch in range(1, num_epochs + 1):
+        train(crnn, device, train_loader, optimizer)
+        test(crnn, device, test_loader)
+
     fig=plt.figure(figsize=(12,20))
     x=np.linspace(1,num_epochs,num_epochs)
 
@@ -214,3 +223,26 @@ if __name__ == '__main__':
 
 
     plt.show()
+
+
+    f=open('./AccLoss.txt','a')
+    f.write("Captcha classification baseline\n")
+    f.write("num_epochs: " + str(num_epochs) + "\n")
+    f.write("train_epoch_loss: ")
+    f.write(str(train_epoch_loss)+"\n")
+    f.write("test_loss_list: ")
+    f.write(str(test_loss_list)+"\n")
+    f.write("train_epoch_acc: ")
+    f.write(str(train_epoch_acc)+"\n")
+    f.write("test_accuracy_list: ")
+    f.write(str(test_accuracy_list)+"\n")
+
+    f.close()
+
+    # Save model
+    torch.save(crnn.state_dict(), "./model_state__dict.pt")
+
+    #Take model
+    # model=CRNN(num_chars, rnn_hidden_size=rnn_hidden_size)
+    # model.load_state_dict(torch.load("./"))
+    # model.eval()
