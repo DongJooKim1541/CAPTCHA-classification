@@ -22,6 +22,11 @@ https://www.kaggle.com/datasets/akashguna/large-captcha-dataset
 
 <br/>
 
+## Models
+(https://arxiv.org/pdf/1507.05717.pdf)
+
+<br/>
+
 ## Instructions
 1. Unzip the zip file and put it in the pycharm project directory<br/>
 2. Adjust the channel tensor of the network according to the image size<br/>
