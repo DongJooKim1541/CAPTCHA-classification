@@ -23,7 +23,7 @@ https://www.kaggle.com/datasets/akashguna/large-captcha-dataset
 <br/>
 
 ## Models
-(https://arxiv.org/pdf/1507.05717.pdf)
+https://arxiv.org/pdf/1507.05717.pdf
 
 <br/>
 
